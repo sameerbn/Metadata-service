@@ -1,0 +1,22 @@
+@Entity
+@Table(name = "file_metadata", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"filePath", "lastModified"})
+})
+public class FileMetadata {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String filePath;
+    private Long fileSize;
+
+    private Timestamp lastModified;
+    private Timestamp scannedAt;
+
+    public FileMetadata() {
+        this.scannedAt = new Timestamp(System.currentTimeMillis());
+    }
+
+    // Getters and setters
+}
