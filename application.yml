@@ -1,0 +1,21 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/adls
+    username: postgres
+    password: yourpassword
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+azure:
+  adls:
+    account-name: your-account
+    account-key: your-access-key
+
+logging:
+  file:
+    name: logs/adls-scan.log
+  level:
+    root: INFO
+    com.example: DEBUG  # Replace with your package name
