@@ -55,6 +55,8 @@ public class AdlsScannerService {
                         meta.setFilePath(fullPath);
                         meta.setFileSize(item.getContentLength());
                         meta.setLastModified(lastModified);
+                        meta.setTargetDirectoryPath(target.getTargetDirectoryPath());
+                        meta.setStatus("NEW");
                         metadataRepository.save(meta);
                         logger.info("✅ New file added: {}", fullPath);
                     }
