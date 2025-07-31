@@ -1,6 +1,3 @@
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 @Service
 public class AdlsScannerService {
 
@@ -12,33 +9,40 @@ public class AdlsScannerService {
     @Autowired
     private FileMetadataRepository metadataRepository;
 
-    @Scheduled(cron = "0 0 * * * *")
+    @Autowired
+    private ScanTargetRepository scanTargetRepository;
+
+    @Scheduled(cron = "0 0 * * * *") // hourly
     public void scan() {
         logger.info("ADLS scan started...");
-
         try {
-            DataLakeFileSystemClient fileSystemClient = dataLakeServiceClient.getFileSystemClient("your-container");
-            DataLakeDirectoryClient dirClient = fileSystemClient.getDirectoryClient("your-dir");
+            List<ScanTarget> targets = scanTargetRepository.findByIsActiveTrue();
+            for (ScanTarget target : targets) {
+                String container = target.getContainerName();
+                String dir = target.getDirectoryPath();
 
-            for (PathItem item : dirClient.listPaths(true)) {
-                if (Boolean.FALSE.equals(item.isDirectory())) {
-                    String path = item.getName();
-                    Long size = item.getContentLength();
-                    Timestamp lastModified = Timestamp.from(item.getLastModified().toInstant());
+                DataLakeFileSystemClient fsClient = dataLakeServiceClient.getFileSystemClient(container);
+                DataLakeDirectoryClient dirClient = fsClient.getDirectoryClient(dir);
 
-                    if (!metadataRepository.existsByFilePathAndLastModified(path, lastModified)) {
-                        FileMetadata metadata = new FileMetadata();
-                        metadata.setFilePath(path);
-                        metadata.setFileSize(size);
-                        metadata.setLastModified(lastModified);
-                        metadataRepository.save(metadata);
-                        logger.info("New file added: {}", path);
-                    } else {
-                        logger.info("File already scanned, skipping: {}", path);
+                for (PathItem item : dirClient.listPaths(true)) {
+                    if (Boolean.FALSE.equals(item.isDirectory())) {
+                        String path = item.getName();
+                        Long size = item.getContentLength();
+                        Timestamp lastModified = Timestamp.from(item.getLastModified().toInstant());
+
+                        if (!metadataRepository.existsByFilePathAndLastModified(path, lastModified)) {
+                            FileMetadata meta = new FileMetadata();
+                            meta.setFilePath(path);
+                            meta.setFileSize(size);
+                            meta.setLastModified(lastModified);
+                            metadataRepository.save(meta);
+                            logger.info("New file added: {}", path);
+                        } else {
+                            logger.info("Already scanned: {}", path);
+                        }
                     }
                 }
             }
-
             logger.info("ADLS scan completed.");
         } catch (Exception e) {
             logger.error("Error while scanning ADLS: ", e);
