@@ -6,3 +6,12 @@ CREATE TABLE file_metadata (
     scanned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (file_path, last_modified)
 );
+
+CREATE TABLE scan_targets (
+    id SERIAL PRIMARY KEY,
+    container_name TEXT NOT NULL,
+    directory_path TEXT NOT NULL,
+    target_directory_path TEXT NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT false,
+    pairing_keys TEXT
+);
