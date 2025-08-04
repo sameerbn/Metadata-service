@@ -10,8 +10,14 @@ spring:
 
 azure:
   adls:
-    account-name: your-account
-    account-key: your-access-key
+    client-id: your-client-id
+    client-secret: your-client-secret
+    tenant-id: your-tenant-id
+    account-name: your-storage-account
+    proxy:
+      enabled: true
+      host: proxy.example.com
+      port: 3128
 
 logging:
   file:
