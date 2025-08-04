@@ -1,18 +1,21 @@
+import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Configuration;
+
+@Data
 @Configuration
-public class AdlsConfig {
-
-    @Value("${azure.adls.account-name}")
+@ConfigurationProperties(prefix = "azure.adls")
+public class AzureAdlsProperties {
+    private String clientId;
+    private String clientSecret;
+    private String tenantId;
     private String accountName;
+    private Proxy proxy = new Proxy();
 
-    @Value("${azure.adls.account-key}")
-    private String accountKey;
-
-    @Bean
-    public DataLakeServiceClient dataLakeServiceClient() {
-        StorageSharedKeyCredential credential = new StorageSharedKeyCredential(accountName, accountKey);
-        return new DataLakeServiceClientBuilder()
-                .credential(credential)
-                .endpoint("https://" + accountName + ".dfs.core.windows.net")
-                .buildClient();
+    @Data
+    public static class Proxy {
+        private boolean enabled;
+        private String host;
+        private int port;
     }
 }
