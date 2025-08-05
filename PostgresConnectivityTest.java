@@ -1,35 +1,69 @@
-import java.io.InputStream;
-import java.net.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 
-public class PostgresProxyTest {
+public class PostgresQueryExample {
+
     public static void main(String[] args) {
-        String host = "yourserver.postgres.database.azure.com";
-        int port = 5432;
+        String host = "top-postgres-pre-flex.postgres.database.azure.com";
+        String databaseName = "your_database_name"; // Replace with your database name
+        String user = "your_username"; // Replace with your username
+        String password = "your_password"; // Replace with your password
 
-        SocketAddress proxyAddr = new InetSocketAddress("localhost", 1080); // SOCKS proxy
-        Proxy proxy = new Proxy(Proxy.Type.SOCKS, proxyAddr);
+        String connectionUrl = "jdbc:postgresql://" + host + ":5432/" + databaseName;
 
-        try (Socket socket = new Socket(proxy)) {
-            socket.connect(new InetSocketAddress(host, port));
-            System.out.println("✅ Connection successful!");
+        Connection connection = null;
+        Statement statement = null;
+        ResultSet resultSet = null;
 
-            InputStream in = socket.getInputStream();
+        try {
+            // Register the JDBC driver (optional for modern JDBC, but good practice)
+            Class.forName("org.postgresql.Driver");
 
-            byte[] buffer = new byte[1024];
-            int bytesRead = in.read(buffer);
+            // Establish the connection
+            System.out.println("Attempting to connect to the database...");
+            connection = DriverManager.getConnection(connectionUrl, user, password);
+            System.out.println("Connection successful!");
 
-            if (bytesRead == -1) {
-                System.out.println("📭 Server closed the connection without sending any data.");
-            } else {
-                System.out.println("📥 Received " + bytesRead + " bytes from server:");
-                for (int i = 0; i < bytesRead; i++) {
-                    System.out.printf("%02X ", buffer[i]);
-                }
-                System.out.println();
+            // Create a statement object
+            statement = connection.createStatement();
+
+            // Define your SQL query
+            // Replace "your_table_name" and "your_column" with actual values
+            String sqlQuery = "SELECT * FROM your_table_name;";
+
+            // Execute the query
+            System.out.println("Executing query: " + sqlQuery);
+            resultSet = statement.executeQuery(sqlQuery);
+
+            // Process the result set
+            System.out.println("Query results:");
+            while (resultSet.next()) {
+                // Example of getting data from a column named "id" and "name"
+                // Replace with your actual column names and data types
+                int id = resultSet.getInt("id");
+                String name = resultSet.getString("name");
+                System.out.println("ID: " + id + ", Name: " + name);
             }
 
-        } catch (Exception e) {
-            System.out.println("❌ Connection failed: " + e.getMessage());
+        } catch (ClassNotFoundException e) {
+            System.err.println("PostgreSQL JDBC Driver not found in the classpath.");
+            e.printStackTrace();
+        } catch (SQLException e) {
+            System.err.println("Database connection failed!");
+            e.printStackTrace();
+        } finally {
+            // Close the resources in a `finally` block to ensure they are always closed
+            try {
+                if (resultSet != null) resultSet.close();
+                if (statement != null) statement.close();
+                if (connection != null) connection.close();
+                System.out.println("Resources closed.");
+            } catch (SQLException e) {
+                System.err.println("Error closing resources: " + e.getMessage());
+            }
         }
     }
 }
